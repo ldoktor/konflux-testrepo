@@ -256,9 +256,6 @@ spec:
         - description: The precise commit SHA that was fetched by this Task. This result uses Chains type hinting to include in the provenance.
           name: CHAINS-GIT_COMMIT
         steps:
-        - name: init-dir-ldoktor
-          image: busybox
-          command: ["sh", "-c", "find /workspace; mkdir -p /workspace/output/clone-repository; echo LDOKTOR CREATED"]
         - name: clone
           env:
           - name: HOME
@@ -446,6 +443,28 @@ spec:
               echo "Running symlink check"
               check_symlinks
             fi
+
+        - name: s3-push
+          image: quay.io/openshift_sandboxed_containers/s3mountpoint
+          env:
+          - name: LDOKTOR_S3_BUCKET
+            valueFrom:
+              secretKeyRef:
+                name: storage-secret
+                key: S3_BUCKET
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: storage-secret
+                key: AWS_ACCESS_KEY_ID
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: storage-secret
+                key: AWS_SECRET_ACCESS_KEY
+          command: ["sh", "-cx", 'echo PUSH; mknod /dev/fuse -m 0666 c 10 229; mkdir /mycontainer; mount-s3 --allow-delete "$LDOKTOR_S3_BUCKET" /mycontainer; \\cp --force -a /workspace/output/. /mycontainer/; ls /workspace/output; echo PUSHED; exit 0']
+          securityContext:
+            privileged: true
         workspaces:
         - description: The git repo will be cloned onto the volume backing this Workspace.
           name: output
@@ -682,6 +701,27 @@ spec:
               secretName: $(params.SNYK_SECRET)
               optional: true
         steps:
+          - name: s3-pull
+            image: quay.io/openshift_sandboxed_containers/s3mountpoint
+            env:
+            - name: LDOKTOR_S3_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: storage-secret
+                  key: S3_BUCKET
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: storage-secret
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: storage-secret
+                  key: AWS_SECRET_ACCESS_KEY
+            command: ["sh", "-cx", 'echo PULL; mknod /dev/fuse -m 0666 c 10 229; mkdir /mycontainer; mount-s3 --allow-delete "$LDOKTOR_S3_BUCKET" /mycontainer; \cp --force -a /mycontainer/. /workspace/workspace/; ls /workspace/workspace; echo PULLED; exit 0']
+            securityContext:
+              privileged: true
           - name: init-dir-ldoktor
             image: busybox
             command: ["sh", "-c", "find /workspace; mkdir -p /workspace/workspace/sast-snyk-check; echo LDOKTOR CREATED sast-snyk-check dir in workspace"]
@@ -772,6 +812,27 @@ spec:
               oras attach --no-tty --registry-config "$HOME/auth.json" --distribution-spec v1.1-referrers-api --artifact-type "${MEDIA_TYPE}" "${IMAGE_URL}" "${UPLOAD_FILE}:${MEDIA_TYPE}"
               echo "Attaching to ${IMAGE_URL} via the OCI 1.1 Referrers Tag"
               oras attach --no-tty --registry-config "$HOME/auth.json" --distribution-spec v1.1-referrers-tag --artifact-type "${MEDIA_TYPE}" "${IMAGE_URL}" "${UPLOAD_FILE}:${MEDIA_TYPE}"
+          - name: s3-push
+            image: quay.io/openshift_sandboxed_containers/s3mountpoint
+            env:
+            - name: LDOKTOR_S3_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: storage-secret
+                  key: S3_BUCKET
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: storage-secret
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: storage-secret
+                  key: AWS_SECRET_ACCESS_KEY
+            command: ["sh", "-cx", 'echo PUSH; mknod /dev/fuse -m 0666 c 10 229; mkdir /mycontainer; mount-s3 --allow-delete "$LDOKTOR_S3_BUCKET" /mycontainer; \cp --force -a /workspace/workspace/. /mycontainer/; ls /workspace/workspace; echo PUSHED; exit 0']
+            securityContext:
+              privileged: true
         workspaces:
         - name: workspace
       when:
