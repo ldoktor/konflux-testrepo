@@ -255,16 +255,69 @@ spec:
           name: CHAINS-GIT_URL
         - description: The precise commit SHA that was fetched by this Task. This result uses Chains type hinting to include in the provenance.
           name: CHAINS-GIT_COMMIT
-        steps:
-        - name: ldoktor-init
-          image: busybox
+        sidecars:
+        - name: csi-podvm-node-driver
           env:
-          - name: WORKSPACE_OUTPUT_PATH
-            value: $(workspaces.output.path)
-          script: |
-            #!/bin/sh
-            echo I AM HERE
-            mkdir -p ${WORKSPACE_OUTPUT_PATH/foo
+            - name: KUBE_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: CSI_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          image: public.ecr.aws/ebs-csi-driver/aws-ebs-csi-driver:v1.37.0
+          imagePullPolicy: Always
+          restartPolicy: Always
+          securityContext:
+            privileged: true
+            runAsNonRoot: false
+            runAsUser: 0
+          ports:
+            - containerPort: 9808
+              name: healthz
+              protocol: TCP
+          volumeMounts:
+            - name: kubelet-data-dir
+              mountPath: /var/lib/kubelet
+              mountPropagation: Bidirectional
+            - mountPath: /tmp
+              name: plugin-dir
+            - mountPath: /dev
+              name: device-dir
+        - name: csi-podvm-wrapper
+          env:
+            - name: BINARY
+              value: "csi-podvm-wrapper"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAME_SPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_UID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+            - name: POD_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          image: quay.io/confidential-containers/csi-podvm-wrapper:latest
+          imagePullPolicy: Always
+          restartPolicy: Always
+          command: ["/usr/bin/csi-podvm-wrapper"] # TODO: using default entrypoint seems to fail with peer-pods
+          args:
+          - --v=2
+          - --endpoint=/tmp/csi-podvm-wrapper.sock
+          - --target-endpoint=/tmp/csi.sock
+          - --namespace=kube-system
+          volumeMounts:
+            - mountPath: /tmp
+              name: plugin-dir
+        steps:
         - name: clone
           env:
           - name: HOME
