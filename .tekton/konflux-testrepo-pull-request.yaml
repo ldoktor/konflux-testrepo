@@ -950,6 +950,7 @@ spec:
             echo "$BASE_IMAGES" > $(workspaces.source.path)/base_images_from_dockerfile
 
           securityContext:
+            privileged: true
             capabilities:
               add:
                 - SETFCAP
@@ -1120,6 +1121,7 @@ spec:
 
           securityContext:
             runAsUser: 0
+            privileged: true
             capabilities:
               add:
                 - SETFCAP
