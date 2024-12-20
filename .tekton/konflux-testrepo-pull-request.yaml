@@ -1356,6 +1356,12 @@ spec:
             - name: WORKDIR_LDOKTOR
               value: $(workspaces.workspace.path)/hacbs/$(context.task.name)
             command: ["sh", "-xc", 'find /workspace; mkdir -p "$WORKDIR_LDOKTOR"; echo LDOKTOR CREATED']
+          - name: init-dir-ldoktor-check
+            image: busybox
+            command:
+            - sh
+            - -xc
+            - echo "I AM HERE"; find /workspace
           - name: sast-snyk-check
             image: quay.io/redhat-appstudio/konflux-test:v1.4.8@sha256:2224fabdb0a28a415d4af4c58ae53d7c4c53c83c315f12e07d1d7f48a80bfa70
             # per https://kubernetes.io/docs/concepts/containers/images/#imagepullpolicy-defaulting
