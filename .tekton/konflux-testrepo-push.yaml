@@ -13,6 +13,7 @@ metadata:
     appstudio.openshift.io/application: test
     appstudio.openshift.io/component: konflux-testrepo
     pipelines.appstudio.openshift.io/type: build
+    foo/bar: baz
   name: konflux-testrepo-on-push
   namespace: user-ns2
 spec:
