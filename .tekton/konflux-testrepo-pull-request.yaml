@@ -1378,7 +1378,7 @@ spec:
               - name: ARGS
                 value: $(params.ARGS)
             script: |
-              #!/usr/bin/env -x bash
+              #!/bin/bash -x
               mkdir -p "$WORKDIR_LDOKTOR"
               pushd "$WORKDIR_LDOKTOR"
               set -euo pipefail
@@ -1432,7 +1432,7 @@ spec:
               - name: IMAGE_DIGEST
                 value: $(params.image-digest)
             script: |
-              #!/usr/bin/env bash
+              #!/bin/bash -x
               mkdir -p "$WORKDIR_LDOKTOR"
               pushd "$WORKDIR_LDOKTOR"
 
