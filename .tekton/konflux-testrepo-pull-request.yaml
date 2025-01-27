@@ -11,7 +11,7 @@ metadata:
       == "main"
   creationTimestamp: null
   labels:
-    appstudio.openshift.io/application: foo
+    appstudio.openshift.io/application: test
     appstudio.openshift.io/component: konflux-testrepo
     pipelines.appstudio.openshift.io/type: build
   name: konflux-testrepo-on-pull-request
