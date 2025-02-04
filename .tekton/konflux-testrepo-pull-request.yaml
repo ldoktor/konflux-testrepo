@@ -764,6 +764,7 @@ spec:
             - $(params.BUILD_ARGS[*])
           script: |
             #!/bin/bash -x
+            #
             set -x
             if [ -n "${PARAM_BUILDER_IMAGE}" ]; then
               echo "WARNING: provided deprecated BUILDER_IMAGE parameter has no effect."
